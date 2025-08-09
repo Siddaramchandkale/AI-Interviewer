@@ -89,42 +89,136 @@ export async function setSessionCookie(idToken: string) {
     }
   }
 
-export async function getCurrentUser() : Promise<User | null> {
-    const cookieStore = await cookies();
-    const sessioncookie = cookieStore.get('session') ?.value;
+// export async function getCurrentUser() : Promise<User | null> {
+//     const cookieStore = await cookies();
+//     const sessioncookie = cookieStore.get('session') ?.value;
 
-    if(!sessioncookie){
-        console.log(sessioncookie);
+//     if(!sessioncookie){
+//         console.log(sessioncookie);
         
-        return null;
+//         return null;
+//     }
+
+//     try {
+//         const decodedClaims = await auth.verifySessionCookie(sessioncookie,true);
+//         const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
+//         if(!userRecord.exists){
+//             return null// Return claims if no user record exists
+//         }
+
+
+//         return {
+//             ...userRecord.data(),
+//             id: userRecord.id,
+//         } as User
+
+//     } catch (e) {
+//         console.log(e);
+//         return null;
+        
+//     }
+
+// }
+
+
+// export async function getCurrentUser(): Promise<User | null> {
+//   try {
+//     const cookieStore = cookies();
+//     const sessionCookie = (await cookieStore).get('session')?.value;
+
+//     if (!sessionCookie) {
+//       console.log("No session cookie found");
+//       return null;
+//     }
+
+//     // Verify Firebase session cookie
+//     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+//     console.log("Decoded claims:", decodedClaims);
+
+//     // Get user from Firestore
+//     const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
+
+//     if (!userRecord.exists) {
+//       console.log("No Firestore user found, returning from claims");
+//       return {
+//         id: decodedClaims.uid,
+//         email: decodedClaims.email,
+//         name: decodedClaims.name || decodedClaims.email?.split('@')[0], // fallback name
+//       } as User;
+//     }
+
+//     const userData = userRecord.data();
+//     console.log("User data from Firestore:", userData);
+
+//     return {
+//       id: userRecord.id,
+//       ...userData,
+//     } as User;
+//   } catch (error) {
+//     console.error("Error in getCurrentUser:", error);
+//     return null;
+//   }
+// }
+
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const cookieStore = cookies();
+    const sessionCookie = (await cookieStore).get('session')?.value;
+
+    if (!sessionCookie) {
+      console.log("No session cookie found");
+      return null;
     }
 
-    try {
-        const decodedClaims = await auth.verifySessionCookie(sessioncookie,true);
-        const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
-        if(!userRecord.exists){
-            return null;
-        }
+    // Verify Firebase session cookie
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    console.log("Decoded claims:", decodedClaims);
 
+    // Try to get user from Firestore
+    const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
 
-        return {
-            ...userRecord.data(),
-            id: userRecord.id,
-        } as User
-
-    } catch (e) {
-        console.log(e);
-        return null;
-        
+    if (userRecord.exists) {
+      return {
+        id: userRecord.id,
+        ...userRecord.data(),
+      } as User;
     }
 
+    // If no Firestore doc exists, fall back to claims
+    console.warn(`No Firestore user found for UID: ${decodedClaims.uid}, falling back to claims`);
+    return {
+      id: decodedClaims.uid,
+      email: decodedClaims.email || '',
+      name: decodedClaims.name || decodedClaims.email?.split('@')[0] || 'Anonymous',
+    } as User;
+
+  } catch (error) {
+    console.error("Error in getCurrentUser:", error);
+    return null;
+  }
 }
 
 export async function isAuthenticated(){
-    // const user = await getCurrentUser();
-    // return !!user;
+    const user = await getCurrentUser();
+    return !!user;
 
-    const cookieStore = cookies();
-  return (await cookieStore).has("session");
+  //   const cookieStore = cookies();
+  // return (await cookieStore).has("session");
 }
+export async function getLatestInterviews(limit: number) : Promise<Interview[] | null> {
+  const interviews = await db
+  .collection('interviews')
+  .orderBy('createdAt','desc')
+  .where('finalized','==',true)
+  .limit(limit)
+  .get();
+
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Interview[];
+}
+
+
+
 

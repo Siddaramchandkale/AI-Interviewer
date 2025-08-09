@@ -1,11 +1,21 @@
 import InterviewCard from '@/components/InterviewCard'
 import { Button } from '@/components/ui/button'
 import { dummyInterviews } from '@/constants'
+import { getCurrentUser, getInterviewsByUserId, getLatestInterviews } from '@/lib/actions/auth.action'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
-const page = () => {
+const page = async () => {
+
+  const user = await getCurrentUser();
+
+  // in order to process these requests parallelly as they are independent of each other
+
+
+  const latestInterviews = await getLatestInterviews(20)
+  const hasUpcomingInterviews = latestInterviews?.length > 0;
+
   return (
    <>
    <section className='card-cta'>
@@ -20,26 +30,17 @@ const page = () => {
     </div>
     <Image src = "/robot.png" alt="robo-dude" width={400} height = {400} className = "max-sm:hidden"/>
    </section>
-
    <section className='flex flex-col gap-6 mt-8'>
-    <h2>
-      Your Interview
-    </h2>
+    <h2>Recent Interviews Taken</h2>
 
     <div className='interviews-section'>
-      {dummyInterviews.map((interview) => (
-        <InterviewCard {...interview} key={interview.id}/>
-      ))}
-    </div>
-   </section>
-
-   <section className='flex flex-col gap-6 mt-8'>
-    <h2>Take an Interview</h2>
-
-    <div className='interviews-section'>
-    {dummyInterviews.map((interview) => (
-        <InterviewCard {...interview} key={interview.id}/>
-      ))}
+    {
+      hasUpcomingInterviews ? (
+        latestInterviews?.map((interview) => (
+          <InterviewCard {...interview} key={interview.id}/>
+        ))
+      ) : (<p>There are no new interviews awailable</p>)
+    }
       {/* <p>Yoi haven&apos;t taken any interviews yet</p> */}
     </div>
    </section>
