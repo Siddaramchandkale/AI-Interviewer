@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import DisplayTechIcons from './DisplayTechIcons';
+import {getInterview } from '@/lib/actions/general.action';
 
-const InterviewCard = ({id,userId,role,type,techstack,createdAt}: InterviewCardProps) => {
-    const feedback = null as Feedback | null;
+const InterviewCard = async ({id,userId,role,type,techstack,createdAt}: InterviewCardProps) => {
+    const feedback = userId && id ? await getInterview(id) : null;
     const normalizedType = /mix/gi.test(type) ? "mixed" : type;
     const formattedDate = dayjs(feedback ?.createdAt || createdAt || Date.now()).format('MMM D, YYYY');
   return (

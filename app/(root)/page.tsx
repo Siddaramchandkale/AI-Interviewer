@@ -1,9 +1,10 @@
 import InterviewCard from '@/components/InterviewCard'
+import SignOutButton from '@/components/signoutButton'
 import { Button } from '@/components/ui/button'
-import { dummyInterviews } from '@/constants'
-import { getCurrentUser, getInterviewsByUserId, getLatestInterviews } from '@/lib/actions/auth.action'
+import { getCurrentUser, getLatestInterviews, signOut } from '@/lib/actions/auth.action'
 import Image from 'next/image'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import React from 'react'
 
 const page = async () => {
@@ -15,6 +16,11 @@ const page = async () => {
 
   const latestInterviews = await getLatestInterviews(20)
   const hasUpcomingInterviews = latestInterviews?.length > 0;
+
+  const handleClick = async () => {
+    await signOut(); // server action
+    redirect("/login");
+  };
 
   return (
    <>
@@ -44,6 +50,10 @@ const page = async () => {
       {/* <p>Yoi haven&apos;t taken any interviews yet</p> */}
     </div>
    </section>
+
+
+   <SignOutButton/>
+
    </>
   )
 }

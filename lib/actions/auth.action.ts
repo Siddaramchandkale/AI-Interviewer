@@ -220,5 +220,12 @@ export async function getLatestInterviews(limit: number) : Promise<Interview[] |
 }
 
 
+export async function signOut() {
+  const cookieStore = await cookies();
+
+  cookieStore.delete("session");
+}
+
+
 
 
